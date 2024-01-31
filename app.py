@@ -1,20 +1,19 @@
-from flask import Flask, render_template
-import pickle
-app=Flask(__name__)
 
-popular_df = pickle.load(open('popular.pkl', 'rb'))
+from flask import Flask, render_template, request, redirect, url_for
+app = Flask(__name__)
+from recommender import Recommender
 
-@app.route('/')
-def index():
-    return render_template('index.html',
-                           book_name = list(popular_df['Book-Title'].values),
-                           author = list(popular_df['Book-Author'].values),
-                           image = list(popular_df['Image-URL-M'].values),
-                           votes = list(popular_df['num_ratings'].values),
-                           rating = list(popular_df['avg-rating'].values)
-                           
-                           
-                           )
+recommender = Recommender()
+@app.route('/', methods=['GET', 'POST'])
+def recommend():
+    data: list[list[str]] = [[]]
+    if request.method == "POST":
+        book_name = request.form.get('book_name')
+        pt = recommender.recommend(book_name)
+        return render_template('index.html', data=pt)
+    else:
+        return render_template('index.html',data=data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
